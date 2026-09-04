@@ -1,4 +1,4 @@
-# TO DO widget
+# To do widget
 
 A dated to-do list home screen widget for Android, plus a small companion app.
 Built with Jetpack Glance (widget), Compose + Material 3 (app), and Room (storage).
@@ -20,13 +20,13 @@ without wiping your to-dos.
 
 ## Adding the widget
 
-Long-press the home screen > Widgets > TO DO. Resize by dragging the handles.
+Long-press the home screen > Widgets > To do. Resize by dragging the handles.
 Default size is 3x3; anything from 2 cells wide upward works.
 
 ## Notes
 
 - Background is transparent by default. If your wallpaper is light, either turn
   on "Dark text" or raise "Background dim" in the app's settings dialog.
-- The `‹` `›` arrows move between dates. Tapping "TO DO" opens the app.
+- The widget always shows today's list. Tapping "To do" opens the app.
 - Tapping a checkbox asks "Completed?", then the item leaves the widget and
   appears under Completed in the app. That prompt can be switched off.

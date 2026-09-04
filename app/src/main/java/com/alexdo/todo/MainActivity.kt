@@ -116,7 +116,7 @@ private fun App() {
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "TO DO",
+                    "To do",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Medium,
                     textAlign = TextAlign.Center,
@@ -294,13 +294,17 @@ private fun SettingsDialog(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(Modifier.height(12.dp))
-                Text("Text size: ${s.fontSizeSp}sp", fontSize = 13.sp)
-                Slider(
-                    value = s.fontSizeSp.toFloat(),
-                    onValueChange = { s = s.copy(fontSizeSp = it.toInt()) },
-                    valueRange = 10f..24f,
-                    steps = 13
-                )
+                Text("Text size", fontSize = 13.sp)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(14 to "Compact", 16 to "Standard", 18 to "Large")
+                        .forEach { (value, label) ->
+                            FilterChip(
+                                selected = s.fontSizeSp == value,
+                                onClick = { s = s.copy(fontSizeSp = value) },
+                                label = { Text(label) }
+                            )
+                        }
+                }
 
                 Spacer(Modifier.height(8.dp))
                 Text("Alignment", fontSize = 13.sp)

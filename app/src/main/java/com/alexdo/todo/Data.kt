@@ -79,32 +79,32 @@ abstract class TodoDb : RoomDatabase() {
 enum class Align { START, CENTER, END }
 
 data class WidgetSettings(
-    val fontSizeSp: Int = 14,
+    val fontSizeSp: Int = 16,
     val align: Align = Align.START,
     val darkText: Boolean = false,
     /** 0..70 percent black scrim behind the widget, for legibility on light wallpapers. */
     val backgroundDim: Int = 0,
     val confirmOnComplete: Boolean = true,
-    val showDivider: Boolean = true
+    val showDivider: Boolean = false
 )
 
 private val Context.settingsStore by preferencesDataStore("widget_settings")
 
 object Settings {
-    private val FONT = intPreferencesKey("font_size")
+    private val FONT = intPreferencesKey("font_size_v2")
     private val ALIGN = stringPreferencesKey("align")
     private val DARK = booleanPreferencesKey("dark_text")
     private val DIM = intPreferencesKey("bg_dim")
     private val CONFIRM = booleanPreferencesKey("confirm")
-    private val DIVIDER = booleanPreferencesKey("divider")
+    private val DIVIDER = booleanPreferencesKey("divider_v2")
 
     private fun from(p: Preferences) = WidgetSettings(
-        fontSizeSp = p[FONT] ?: 14,
+        fontSizeSp = p[FONT] ?: 16,
         align = runCatching { Align.valueOf(p[ALIGN] ?: "START") }.getOrDefault(Align.START),
         darkText = p[DARK] ?: false,
         backgroundDim = p[DIM] ?: 0,
         confirmOnComplete = p[CONFIRM] ?: true,
-        showDivider = p[DIVIDER] ?: true
+        showDivider = p[DIVIDER] ?: false
     )
 
     fun flow(context: Context): Flow<WidgetSettings> =
