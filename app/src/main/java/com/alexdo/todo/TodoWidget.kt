@@ -11,6 +11,7 @@ import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.action.Action
 import androidx.glance.action.ActionParameters
 import androidx.glance.action.actionParametersOf
 import androidx.glance.action.actionStartActivity
@@ -27,6 +28,7 @@ import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.appwidget.updateAll
 import androidx.glance.background
 import androidx.glance.layout.Alignment
+import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
@@ -45,7 +47,6 @@ import androidx.glance.unit.ColorProvider
 import java.time.LocalDate
 
 private val OFFSET = intPreferencesKey("day_offset")
-val DELTA_PARAM = ActionParameters.Key<Int>("delta")
 val ID_PARAM = ActionParameters.Key<Long>(ConfirmActivity.EXTRA_ID)
 val TEXT_PARAM = ActionParameters.Key<String>(ConfirmActivity.EXTRA_TEXT)
 
@@ -68,6 +69,10 @@ private fun Body(date: LocalDate, todos: List<Todo>, s: WidgetSettings) {
     val fg = if (s.darkText) Color(0xFF101010) else Color.White
     val fgProvider = ColorProvider(fg)
     val dim = ColorProvider(fg.copy(alpha = 0.55f))
+    val shadow = ColorProvider(
+        if (s.darkText) Color.White.copy(alpha = 0.70f)
+        else Color.Black.copy(alpha = 0.85f)
+    )
     val body = s.fontSizeSp.sp
     val header = (s.fontSizeSp + 2).sp
 
@@ -94,10 +99,16 @@ private fun Body(date: LocalDate, todos: List<Todo>, s: WidgetSettings) {
             modifier = GlanceModifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Arrow("\u2039", dim, header) { -1 }
+            Arrow(
+                glyph = "\u2039",
+                color = dim,
+                shadowColor = shadow,
+                size = header,
+                action = actionRunCallback<PreviousDateAction>()
+            )
             Spacer(GlanceModifier.width(6.dp))
             Column(modifier = GlanceModifier.defaultWeight()) {
-                Text(
+                ShadowText(
                     text = "TO DO",
                     style = TextStyle(
                         color = fgProvider,
@@ -106,16 +117,27 @@ private fun Body(date: LocalDate, todos: List<Todo>, s: WidgetSettings) {
                         textAlign = align
                     ),
                     modifier = GlanceModifier.fillMaxWidth()
-                        .clickable(actionStartActivity<MainActivity>())
+                        .clickable(actionStartActivity<MainActivity>()),
+                    shadowColor = shadow,
+                    fillWidth = true
                 )
-                Text(
+                ShadowText(
                     text = Fmt.label(date),
                     style = TextStyle(color = dim, fontSize = (s.fontSizeSp - 2).sp, textAlign = align),
                     modifier = GlanceModifier.fillMaxWidth()
+                        .clickable(actionRunCallback<TodayDateAction>()),
+                    shadowColor = shadow,
+                    fillWidth = true
                 )
             }
             Spacer(GlanceModifier.width(6.dp))
-            Arrow("\u203A", dim, header) { 1 }
+            Arrow(
+                glyph = "\u203A",
+                color = dim,
+                shadowColor = shadow,
+                size = header,
+                action = actionRunCallback<NextDateAction>()
+            )
         }
 
         if (s.showDivider) {
@@ -129,10 +151,12 @@ private fun Body(date: LocalDate, todos: List<Todo>, s: WidgetSettings) {
 
         // ---- Items ----
         if (todos.isEmpty()) {
-            Text(
+            ShadowText(
                 text = "Nothing here",
                 style = TextStyle(color = dim, fontSize = body, textAlign = align),
-                modifier = GlanceModifier.fillMaxWidth()
+                modifier = GlanceModifier.fillMaxWidth(),
+                shadowColor = shadow,
+                fillWidth = true
             )
         } else {
             LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
@@ -158,18 +182,20 @@ private fun Body(date: LocalDate, todos: List<Todo>, s: WidgetSettings) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (s.align != Align.END) {
-                            Box(tap, fgProvider, s.fontSizeSp)
+                            CheckBoxIcon(tap, fgProvider, s.fontSizeSp)
                             Spacer(GlanceModifier.width(8.dp))
                         }
-                        Text(
+                        ShadowText(
                             text = todo.text,
                             maxLines = 2,
                             style = TextStyle(color = fgProvider, fontSize = body, textAlign = align),
-                            modifier = GlanceModifier.defaultWeight()
+                            modifier = GlanceModifier.defaultWeight(),
+                            shadowColor = shadow,
+                            fillWidth = true
                         )
                         if (s.align == Align.END) {
                             Spacer(GlanceModifier.width(8.dp))
-                            Box(tap, fgProvider, s.fontSizeSp)
+                            CheckBoxIcon(tap, fgProvider, s.fontSizeSp)
                         }
                     }
                 }
@@ -179,7 +205,7 @@ private fun Body(date: LocalDate, todos: List<Todo>, s: WidgetSettings) {
 }
 
 @Composable
-private fun Box(tap: GlanceModifier, color: ColorProvider, fontSizeSp: Int) {
+private fun CheckBoxIcon(tap: GlanceModifier, color: ColorProvider, fontSizeSp: Int) {
     val boxSize = (fontSizeSp + 4).dp
     Image(
         provider = ImageProvider(R.drawable.ic_box),
@@ -190,23 +216,69 @@ private fun Box(tap: GlanceModifier, color: ColorProvider, fontSizeSp: Int) {
 }
 
 @Composable
-private fun Arrow(glyph: String, color: ColorProvider, size: androidx.compose.ui.unit.TextUnit, delta: () -> Int) {
-    Text(
+private fun ShadowText(
+    text: String,
+    style: TextStyle,
+    shadowColor: ColorProvider,
+    modifier: GlanceModifier = GlanceModifier,
+    maxLines: Int = Int.MAX_VALUE,
+    fillWidth: Boolean = false
+) {
+    val textModifier = if (fillWidth) GlanceModifier.fillMaxWidth() else GlanceModifier
+    Box(modifier = modifier) {
+        Text(
+            text = text,
+            maxLines = maxLines,
+            style = style.copy(color = shadowColor),
+            modifier = textModifier.padding(start = 1.dp, top = 1.dp)
+        )
+        Text(
+            text = text,
+            maxLines = maxLines,
+            style = style,
+            modifier = textModifier
+        )
+    }
+}
+
+@Composable
+private fun Arrow(
+    glyph: String,
+    color: ColorProvider,
+    shadowColor: ColorProvider,
+    size: androidx.compose.ui.unit.TextUnit,
+    action: Action
+) {
+    ShadowText(
         text = glyph,
         style = TextStyle(color = color, fontSize = size),
         modifier = GlanceModifier
-            .padding(horizontal = 4.dp, vertical = 2.dp)
-            .clickable(actionRunCallback<ShiftDateAction>(actionParametersOf(DELTA_PARAM to delta())))
+            .padding(horizontal = 8.dp, vertical = 6.dp)
+            .clickable(action),
+        shadowColor = shadowColor
     )
 }
 
-/** Moves the widget one day forward or back. */
-class ShiftDateAction : ActionCallback {
+private suspend fun shiftDate(context: Context, glanceId: GlanceId, delta: Int) {
+    updateAppWidgetState(context, glanceId) { prefs ->
+        prefs[OFFSET] = (prefs[OFFSET] ?: 0) + delta
+    }
+    TodoWidget().update(context, glanceId)
+}
+
+class PreviousDateAction : ActionCallback {
+    override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) =
+        shiftDate(context, glanceId, -1)
+}
+
+class NextDateAction : ActionCallback {
+    override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) =
+        shiftDate(context, glanceId, 1)
+}
+
+class TodayDateAction : ActionCallback {
     override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
-        val delta = parameters[DELTA_PARAM] ?: 0
-        updateAppWidgetState(context, glanceId) { prefs ->
-            prefs[OFFSET] = (prefs[OFFSET] ?: 0) + delta
-        }
+        updateAppWidgetState(context, glanceId) { prefs -> prefs[OFFSET] = 0 }
         TodoWidget().update(context, glanceId)
     }
 }

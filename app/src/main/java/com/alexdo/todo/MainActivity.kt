@@ -62,8 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.appwidget.updateAll
 import androidx.compose.foundation.isSystemInDarkTheme
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -233,12 +232,11 @@ private fun App() {
         SettingsDialog(
             current = settings,
             onDismiss = { showSettings = false },
-            onSave = { s ->
+            onChange = { s ->
                 scope.launch {
                     Settings.save(context, s)
                     TodoWidget().updateAll(context)
                 }
-                showSettings = false
             }
         )
     }
@@ -273,17 +271,29 @@ private fun TodoRow(todo: Todo, onToggle: () -> Unit, onDelete: () -> Unit) {
 private fun SettingsDialog(
     current: WidgetSettings,
     onDismiss: () -> Unit,
-    onSave: (WidgetSettings) -> Unit
+    onChange: (WidgetSettings) -> Unit
 ) {
     var s by remember { mutableStateOf(current) }
 
+    LaunchedEffect(s) {
+        if (s != current) {
+            delay(100)
+            onChange(s)
+        }
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        confirmButton = { TextButton(onClick = { onSave(s) }) { Text("Save") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-        title = { Text("Widget") },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Done") } },
+        title = { Text("Widget settings") },
         text = {
             Column {
+                Text(
+                    "Changes apply to the widget automatically.",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(12.dp))
                 Text("Text size: ${s.fontSizeSp}sp", fontSize = 13.sp)
                 Slider(
                     value = s.fontSizeSp.toFloat(),
