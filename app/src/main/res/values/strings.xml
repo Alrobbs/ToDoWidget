@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">TO DO</string>
+    <string name="widget_label">TO DO</string>
+    <string name="widget_description">A dated to-do list on your home screen.</string>
+</resources>
