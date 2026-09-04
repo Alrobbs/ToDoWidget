@@ -1,7 +1,6 @@
 package com.alexdo.todo
 
 import android.content.Context
-import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -12,7 +11,6 @@ import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
-import androidx.glance.LocalContext
 import androidx.glance.action.ActionParameters
 import androidx.glance.action.actionParametersOf
 import androidx.glance.action.actionStartActivity
@@ -48,7 +46,8 @@ import java.time.LocalDate
 
 private val OFFSET = intPreferencesKey("day_offset")
 val DELTA_PARAM = ActionParameters.Key<Int>("delta")
-val ID_PARAM = ActionParameters.Key<Long>("todo_id")
+val ID_PARAM = ActionParameters.Key<Long>(ConfirmActivity.EXTRA_ID)
+val TEXT_PARAM = ActionParameters.Key<String>(ConfirmActivity.EXTRA_TEXT)
 
 class TodoWidget : GlanceAppWidget() {
 
@@ -66,7 +65,6 @@ class TodoWidget : GlanceAppWidget() {
 
 @Composable
 private fun Body(date: LocalDate, todos: List<Todo>, s: WidgetSettings) {
-    val context = LocalContext.current
     val fg = if (s.darkText) Color(0xFF101010) else Color.White
     val fgProvider = ColorProvider(fg)
     val dim = ColorProvider(fg.copy(alpha = 0.55f))
@@ -141,14 +139,12 @@ private fun Body(date: LocalDate, todos: List<Todo>, s: WidgetSettings) {
                 items(todos.size) { i ->
                     val todo = todos[i]
                     val tap = if (s.confirmOnComplete) {
-                        // Unique action string per item, otherwise Android recycles the
-                        // PendingIntent and every checkbox sends the same id.
                         GlanceModifier.clickable(
-                            actionStartActivity(
-                                Intent(context, ConfirmActivity::class.java)
-                                    .setAction("complete:${todo.id}")
-                                    .putExtra(ConfirmActivity.EXTRA_ID, todo.id)
-                                    .putExtra(ConfirmActivity.EXTRA_TEXT, todo.text)
+                            actionStartActivity<ConfirmActivity>(
+                                actionParametersOf(
+                                    ID_PARAM to todo.id,
+                                    TEXT_PARAM to todo.text
+                                )
                             )
                         )
                     } else {
